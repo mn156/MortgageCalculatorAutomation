@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>NAF Quick Quote</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="form-card">
+        <h2>Get a Mortgage Quote</h2>
+
+        <label for="name">Full Name</label>
+        <input type="text" id="name" placeholder="Jane Smith">
+
+        <label for="email">Email Address</label>
+        <input type="email" id="email" required placeholder="jane@email.com">
+
+        <label for="HomePrice">Home Price</label>
+        <input type="number" id="HomePrice" min="0" placeholder="450000">
+
+        <label for="DownPayment">Down Payment</label>
+        <input type="text" id="DownPayment" placeholder="90000">
+
+        <label for="LoanTerm-select">Loan Term</label>
+        <select name="loanAmount" id="LoanTerm-select">
+            <option value="">Select Loan Term</option>
+            <option value="30">30 Year</option>
+            <option value="20">20 Year</option>
+            <option value="15">15 Year</option>
+            <option value="10">10 Year</option>
+        </select>
+
+        <label for="Interest">Interest Rate</label>
+        <input type="text" id="Interest" placeholder="6.75">
+
+        <label for="CreditScore">Credit Score</label>
+        <input type="text" id="CreditScore" placeholder="740">
+
+        <label for="MonthlyIncome">Monthly Income</label>
+        <input type="text" id="MonthlyIncome" placeholder="8500">
+
+        <div class="button-container">
+            <button onclick="sendLead()">Submit Application</button>
+        </div>
+        <p id="status"></p>
+    </div>
+
+    <div class="form-card">
+        <h2>Monthly payment breakdown</h2>
+        <canvas id="myChart"></canvas>
+        <p class="total-line">Estimated Total <span id="TotalString">$0.00</span></p>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
