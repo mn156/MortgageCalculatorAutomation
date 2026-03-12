@@ -147,7 +147,7 @@
     },
     {
       "parameters": {
-        "sendTo": "toshka0123@gmail.com",
+        "sendTo": "={{ $env[\"EMAIL\"]}",
         "subject": "=THIS PERSON HIGH APPROVAL RATING:  {{ $json.name }} Email: {{ $json.email }}",
         "message": "={{ $json.analysis.summary }}",
         "options": {}
@@ -173,7 +173,7 @@
         "operation": "append",
         "documentId": {
           "__rl": true,
-          "value": "https://docs.google.com/spreadsheets/d/1Xx96pyTFBnB5aMBXcpF3r_yb6BTrJ3QXWHFIpHEV4RA/edit?gid=0#gid=0",
+          "value": "={{ $env[\"GOOGLE_SHEET_ID\"]}",
           "mode": "url"
         },
         "sheetName": {
@@ -279,7 +279,7 @@
         "operation": "append",
         "documentId": {
           "__rl": true,
-          "value": "https://docs.google.com/spreadsheets/d/1Xx96pyTFBnB5aMBXcpF3r_yb6BTrJ3QXWHFIpHEV4RA/edit?gid=970145317#gid=970145317",
+          "value": "={{ $env[\"GOOGLE_SHEET_ID\"]}",
           "mode": "url"
         },
         "sheetName": {
