@@ -1,0 +1,603 @@
+{
+  "name": "My workflow 2",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "AI-GATEWAY",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -160,
+        -16
+      ],
+      "id": "1f15e513-b057-43d8-b647-d1c8d241f680",
+      "name": "Webhook",
+      "webhookId": "0b9aaf98-213e-4e15-b0de-843279bfef53"
+    },
+    {
+      "parameters": {
+        "resource": "document",
+        "modelId": {
+          "__rl": true,
+          "value": "=models/gemini-2.5-flash",
+          "mode": "id"
+        },
+        "text": "=### ROLE AND INSTRUCTIONS\nYou are a Senior Mortgage Loan Officer. Your job is to read this client's data and determine their chances of taking out a mortgage and getting approved. Follow standard lending guidelines (DTI under 43%, LTV under 80% for best rates).\n\n### CLIENT DATA\n- Name: {{ $json.body.name }}\n- Monthly Income: ${{ $json.body.MonthlyIncome }}\n- Credit Score: {{ $json.body.creditScore }}\n- Home Price: {{ $json.body.HomePrice }}\n- Loan Amount: ${{ Number($json.body.HomePrice) - Number($json.body.DownPayment) }}\n\n### EVALUATION CRITERIA\n1. Calculate the Loan-to-Value (LTV) ratio.\n2. Estimate if the monthly income supports this loan amount.\n3. Provide a \"Likelihood of Approval\" (0-100%).\n4. Provide a \"Likelihood of Closing\" (0-100%).\n\nReturn only a JSON object. Do not include markdown or backticks.\n{\n  \"score\": number,\n  \"approval_pct\": number,\n  \"ltv\": number,\n  \"summary\": stri\n}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        320,
+        0
+      ],
+      "id": "c6790ac5-9adb-4a27-a50b-6ab67870396a",
+      "name": "Analyze document",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "uRk89iLEUsTS7OXi",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "87af4bd5-97cf-4220-8697-30486efd703c",
+              "name": "analysis",
+              "value": "={{ JSON.parse($json.content.parts[0].text) }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        496,
+        -16
+      ],
+      "id": "e3f6acac-7669-42b8-9c8e-41b384ea593e",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "29568890-1147-4e17-87b4-a48d04cb4083",
+              "name": "name",
+              "value": "={{ $json.body.name }}",
+              "type": "string"
+            },
+            {
+              "id": "c93b964e-fcd9-4d24-948a-a9b9434f74a9",
+              "name": "email",
+              "value": "={{ $json.body.email }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        352,
+        -176
+      ],
+      "id": "b7ad9ea1-f875-4fa2-aba0-71002449c592",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        672,
+        -160
+      ],
+      "id": "00e48fb5-c1ad-47a0-8a5c-68d6995a7128",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "0847de9c-17af-4588-9381-94381cf3a86c",
+              "leftValue": "={{ $json.analysis.score }}",
+              "rightValue": 80,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        848,
+        -160
+      ],
+      "id": "524764a0-3169-488b-a2fc-69566f39f623",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "sendTo": "toshka0123@gmail.com",
+        "subject": "=THIS PERSON HIGH APPROVAL RATING:  {{ $json.name }} Email: {{ $json.email }}",
+        "message": "={{ $json.analysis.summary }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1184,
+        -224
+      ],
+      "id": "57984464-a852-44fe-af12-925b4bfa64d7",
+      "name": "Send a message",
+      "webhookId": "f771ad5c-0f3e-4e00-ad7f-3aee820246ab",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "epuFTFHNnicvT9tB",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1Xx96pyTFBnB5aMBXcpF3r_yb6BTrJ3QXWHFIpHEV4RA/edit?gid=0#gid=0",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Follow up Later",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "name": "={{ $json.name }}",
+            "email": "={{ $json.email }}",
+            "score": "={{ $json.analysis.score }}",
+            "approval_pct": "={{ $json.analysis.approval_pct }}",
+            "ltv": "={{ $json.analysis.ltv }}",
+            "summary": "={{ $json.analysis.summary }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "score",
+              "displayName": "score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "approval_pct",
+              "displayName": "approval_pct",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "summary",
+              "displayName": "summary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "ltv",
+              "displayName": "ltv",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1056,
+        -64
+      ],
+      "id": "2798a6c5-b5ed-40ca-895a-71688327ddd9",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "4OEee5jz2yMyzc4T",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1Xx96pyTFBnB5aMBXcpF3r_yb6BTrJ3QXWHFIpHEV4RA/edit?gid=970145317#gid=970145317",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "priority follow up",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "name": "={{ $json.name }}",
+            "email": "={{ $json.email }}",
+            "score": "={{ $json.analysis.score }}",
+            "approval_pct": "={{ $json.analysis.approval_pct }}",
+            "summary": "={{ $json.analysis.summary }}",
+            "ltv": "={{ $json.analysis.ltv }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "score",
+              "displayName": "score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "approval_pct",
+              "displayName": "approval_pct",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "summary",
+              "displayName": "summary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "ltv",
+              "displayName": "ltv",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1072,
+        -352
+      ],
+      "id": "86b660b8-de23-4e94-84c9-139d29fc0b37",
+      "name": "Append row in sheet1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "4OEee5jz2yMyzc4T",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "efd03695-4052-48c8-b56d-5733090f00e0",
+              "leftValue": "={{ $json.body.name }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "ea99b9de-0b13-436f-96ea-93ba49a672cc",
+              "leftValue": "={{ $json.body.email }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "0e43f8a8-fa62-4ce7-90dd-bd0949714de6",
+              "leftValue": "={{ $json.body.creditScore }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "62e01d65-44bf-402d-aef1-4120a9568e76",
+              "leftValue": "={{ $json.body.HomePrice }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "75e425d7-bc5b-4d80-b4d6-e0b739334fc8",
+              "leftValue": "={{ $json.body.LoanAmount }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "e7f2a2a6-6142-4263-955f-96f7b8f7e80d",
+              "leftValue": "={{ $json.body.DownPayment }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "5ef9b369-439f-4e5c-a220-33017d06648c",
+              "leftValue": "={{ $json.body.MonthlyIncome }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "ec738f21-898e-48e5-83b7-06157407acbe",
+              "leftValue": "={{ $json.body.HomePrice }}",
+              "rightValue": "={{ $json.body.DownPayment }}",
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        48,
+        -16
+      ],
+      "id": "2680c97f-41f7-436d-bf8d-e815a170c85d",
+      "name": "If1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze document": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Append row in sheet1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        []
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Analyze document",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "05f966c4-97b5-41fe-b890-5f6a6e931632",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "ee895f35c4386960da1b7be558b63cd0e025e22c0ad73d83d39c155fb7fb1201"
+  },
+  "id": "0ILDqBDAgvIcB6hz",
+  "tags": []
+}
